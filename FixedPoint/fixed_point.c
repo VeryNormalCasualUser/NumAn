@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/_types/_sigaltstack.h>
 #include "../utils.h"
+#include "../test_functions.h"
 
 #define P 0.0000001
 #define POW 1000000
@@ -86,58 +87,31 @@ bool is_newton_raphson_contraction(double (*f)(double), double starting_value, c
 double newton_raphson_phi(double (*f)(double), double starting_value, const double precision){
   double fx = (*f)(starting_value);
   double fprimx = derivative(f, starting_value, precision);
-  printf("x=%lf; f(x)=%lf; f'(x)=%lf;\n", starting_value, fx, fprimx); 
+  printf("x=%lf; f(x)=%lf; f'(x)=%lf;\n", starting_value, fx, fprimx);
+  return starting_value - (fx/fprimx);
+}
+
+double newton_raphson_phi_opt(double (*f)(double), double starting_value, double fx, const double precision){;
+  double fprimx = derivative(f, starting_value, precision);
+  printf("x=%lf; f(x)=%lf; f'(x)=%lf;\n", starting_value, fx, fprimx);
   return starting_value - (fx/fprimx);
 }
 
 double newton_raphson(double (*f)(double), double starting_value, const int iterations, const double precision, const bool check_contraction){
-  double x1;
   int count = 0;
-  double prev;
+  double fx;
   if (check_contraction && !is_newton_raphson_contraction(f, starting_value, precision)){
     printf("Is not contraction around %lf\n", starting_value);
     return NAN; 
   }
-  x1 = newton_raphson_phi(f, starting_value, precision); 
-  prev = starting_value;
-  starting_value = x1;
-  while(fabs(starting_value - prev) > precision && count < iterations-1){
-    prev = starting_value; 
-    starting_value = newton_raphson_phi(f, starting_value, precision); 
-    ++count; 
+  fx = (*f)(starting_value);
+  while(fabs(fx) > precision && count < iterations){
+    starting_value = newton_raphson_phi_opt(f, starting_value, fx, precision);
+    ++count;
+    fx = (*f)(starting_value);
   }
   printf("count: %d\n", count+1); 
   return starting_value; 
-}
-
-double square(double x){
-  return x*x; 
-}
-
-double cube(double x){
-  return x*x*x; 
-}
-
-double cosSq(double x){
-  double cosx = cos(x);
-  return cosx*cosx; 
-}
-
-double cust1(double x){
-  double x2 = x*x; 
-  return x2*x + x2 - 1; 
-}
-
-double cust2(double x){
-  return x*x + (1/(x+1)) - 3*x; 
-}
-
-double cust3(double x){
-  return 5*x - 10;
-}
-
-double alternate(double x) {
-  return x/sqrt(pow(x,2) + 1); 
 }
 
 int main(){
@@ -145,7 +119,7 @@ int main(){
 
   double res = find_std_fixed_point(&cosSq, 0.5, 200000, P);
   printf("0 %lf\n", res);
-  double res1 = find_std_fixed_point(&alternate, 0.9, 200000, P);
+  double res1 = find_std_fixed_point(&alternate, 0.5, 200000, P);
   printf("1 %lf\n", res1);
   double res2 = find_std_fixed_point(&cube, 0.5, 20000, P); 
   printf("2 %lf\n", res2);
@@ -164,5 +138,19 @@ int main(){
   printf("7 %lf\n", ex2a);
   double ex3a = newton_raphson(&cust3, 1, 2, P, false);
   printf("8 %lf\n", ex3a);
+
+  double ex2ex3_1 = newton_raphson(&ex2_3, 1, POW, P, false);
+  printf("9 %lf\n", ex2ex3_1);
+
+  double ex2ex3_2 = newton_raphson(&ex2_3, 20, POW, P, false);
+  printf("10 %lf\n", ex2ex3_2);
+
+  double ex2ex3_3 = newton_raphson(&ex2_3, -20, POW, P, false);
+  printf("11 %lf\n", ex2ex3_3);
+
+
+  printf("res: %lf\n", ex2_3(ex2ex3_1));
+  printf("res: %lf\n", ex2_3(ex2ex3_2));
+  printf("res: %lf\n", ex2_3(ex2ex3_3));
 }
 

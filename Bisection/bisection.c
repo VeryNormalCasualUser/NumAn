@@ -1,4 +1,5 @@
 #include "../range_t.h"
+#include "../test_functions.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,20 +48,19 @@ range_t *bisect(double (*f)(double), double needed_res, double a, double b) {
   return res;
 }
 
-double xsquared(double x) { return x * x * x; }
 
 int main() {
   printf("RES:\n");
   double x = 3.0;
   for (int i = 0; i < 20; ++i) {
-    range_t *res = bisect(xsquared, x, -(x + 1.0), x + 1.0);
+    range_t *res = bisect(&cube, x, -(x + 1.0), x + 1.0);
     printf("%d, %lf: %lf, %lf; %d \n", i, x, res->min, res->max, res->count);
     free(res);
     x *= 3;
   }
   x = -3.0;
   for (int i = 0; i < 20; ++i) {
-    range_t *res = bisect(xsquared, x, x - 1.0, -(x - 1.0));
+    range_t *res = bisect(&cube, x, x - 1.0, -(x - 1.0));
     printf("%d, %lf: %lf, %lf; %d \n", i, x, res->min, res->max, res->count);
     free(res);
     x *= 3;

@@ -1,8 +1,20 @@
 #include <math.h>
 
-double ex2_3(double x){
+double ex2_3a(double x){
   double x2 = x*x;
   return x2*x - 6*x2 + 4*x + 12;  
+}
+
+double ex2_3b(double x){
+  double x2 = x*x;
+  double x3 = x2*x;
+  double x4 = x3*x;
+  double x6 = x4*x2;
+  return exp(pow(sin(x), 3)) + x6 - 2*x4 - x3 - 1;
+}
+
+double ex2_3b_unopt(double x){
+  return exp(pow(sin(x), 3)) + pow(x,6) - 2*pow(x,4) - pow(x,3) - 1;
 }
 
 double square(double x){

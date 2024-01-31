@@ -8,12 +8,10 @@
 #include <string.h>
 
 double det_T(const unsigned int n, double T[n][n]) {
-  unsigned int i = 0;
   double res = 0;
-  while (i < n) {
+  for (unsigned int i = 0; i < n; ++i)
     res += T[i][i];
-    ++i;
-  }
+  printf("det(T): %lf\n", res);
   return res;
 }
 
@@ -40,15 +38,24 @@ double det(const unsigned n, double A[n][n]) {
 }
 
 double *solve(const unsigned int n, double A[n][n], double b[n]) {
-  b[0] = 1; // TODO: fix
+  for (unsigned int i = 0; i < n; ++i) {
+    for (unsigned int j = 0; j < n; ++j) {
+      printf("%lf ", A[i][j]);
+    }
+    printf("|%lf| ", b[i]);
+    printf("\n");
+  }
+  printf("\n");
+
   if (fabs(det(n, A)) > P) {
     for (unsigned int i = 0; i < n - 1; ++i) {
       double a = A[i][i];
       for (unsigned int j = i + 1; j < n; ++j) {
         double d = A[j][i];
-        double a_d = d/a;
-        for (unsigned int k = i; k < n; k++){
-          A[j][k] -= a_d*A[i][k]; 
+        double a_d = d / a;
+        b[j] -= a_d * b[j];
+        for (unsigned int k = i; k < n; k++) {
+          A[j][k] -= a_d * A[i][k];
         }
       }
     }
@@ -57,11 +64,12 @@ double *solve(const unsigned int n, double A[n][n], double b[n]) {
       for (unsigned int j = 0; j < n; ++j) {
         printf("%lf ", A[i][j]);
       }
+      printf("|%lf| ", b[i]);
       printf("\n");
     }
 
-    return NULL;
-    // return back_sub(n, A, b);
+    return back_sub(n, A, b);
+
   } else {
     return NULL;
   }
@@ -170,12 +178,18 @@ void test_solver(void) {
       A[i][j] = 0;
     }
   }
+  double prev = 1;
   for (unsigned int i = 0; i < n; i++) {
-    for (unsigned int j = 0; j < n; j++) {
-      A[i][j] = ++count;
+    for (unsigned int j = i; j < n; j++) {
+      prev = A[i][j] = prev * ++count;
     }
+    b[i] = 1;
   }
-  solve(n, A, b);
+
+  double *x = back_sub(n, A, b);
+  for (unsigned int i = 0; i < n; i++) {
+    printf("%lf ", x[i]);
+  }
 }
 
 int main() {

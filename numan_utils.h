@@ -1,3 +1,6 @@
+#define P 1E-8
+#define POW 1000000
+
 inline int min(int a, int b) { return a < b ? a : b; }
 
 double derivative(double (*f)(double), double value, double precision){

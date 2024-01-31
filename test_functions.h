@@ -46,3 +46,11 @@ double cust3(double x){
 double alternate(double x) {
   return x/sqrt(pow(x,2) + 1); 
 }
+
+double ex3_e(double x){
+  return pow(x,3) - x;
+}
+
+double ex4(double x){
+  return exp(x) + sin(x) - 4;
+}

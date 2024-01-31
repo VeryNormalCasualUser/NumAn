@@ -1,14 +1,10 @@
 #include "../test_functions.h"
-#include "../utils.h"
+#include "../numan_utils.h"
 #include <fenv.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/_types/_sigaltstack.h>
-
-#define P 0.0000001
-#define POW 1000000
 
 typedef struct properties_t {
   bool is_contraction;
@@ -113,9 +109,12 @@ double newton_raphson_mul(double (*f)(double), double starting_value,
     return NAN;
   }
   fx = (*f)(starting_value);
-  while (fabs(fx) > precision && count < iterations) {
+  while (
+      // fabs(fx) > precision &&
+      count < iterations) {
     starting_value =
         newton_raphson_phi_opt(f, starting_value, fx, precision, m);
+    printf("%d: %lf\n", count, starting_value);
     ++count;
     fx = (*f)(starting_value);
   }
@@ -130,8 +129,8 @@ double newton_raphson(double (*f)(double), double starting_value,
                             check_contraction);
 }
 
-double secant_phi(double xk_1, double xk_2, double fxk_1,
-                  double fxk_2, const int m) {
+double secant_phi(double xk_1, double xk_2, double fxk_1, double fxk_2,
+                  const int m) {
   return xk_1 - m * ((fxk_1 * (xk_1 - xk_2)) / ((fxk_1 - fxk_2)));
 }
 
@@ -154,17 +153,36 @@ double secant(double (*f)(double), double xk, int iterations,
   return xk;
 }
 
-int main() {
-  fesetround(FE_TONEAREST);
-  /*
+double secant_2(double (*f)(double), double xk_1, double xk_2, int iterations,
+              const double precision) {
+  const int temp = iterations; //TODO: remove;
+  double fxk_2 = (*f)(xk_2);
+  double fxk_1 = (*f)(xk_1);
+  double fx;
+  double xk;
+  do {
+    xk = secant_phi(xk_1, xk_2, fxk_1, fxk_2, 1);
+    fx = (*f)(xk);
+    iterations--;
+    xk_2 = xk_1;
+    fxk_2 = fxk_1;
+    xk_1 = xk;
+    fxk_1 = fx;
+  } while (fabs(fx) > precision && iterations > 0);
+  printf("%d\n", temp-iterations);
+  return xk;
+}
+
+void test1(void) {
   double res = find_std_fixed_point(&cosSq, 0.5, 200000, P);
   printf("0 %lf\n", res);
   double res1 = find_std_fixed_point(&alternate, 0.5, 200000, P);
   printf("1 %lf\n", res1);
   double res2 = find_std_fixed_point(&cube, 0.5, 20000, P);
   printf("2 %lf\n", res2);
+}
 
-
+void test2(void) {
   double res3 = newton_raphson(&alternate, 0.9, 200000, P, true);
   printf("3 %lf\n", res3);
   double res4 = newton_raphson(&cube, 0.5, 200000, P, true);
@@ -178,7 +196,9 @@ int main() {
   printf("7 %lf\n", ex2a);
   double ex3a = newton_raphson(&cust3, 1, 2, P, false);
   printf("8 %lf\n", ex3a);
+}
 
+void test3(void) {
   double ex2ex3_1 = newton_raphson(&ex2_3a, 1, POW, P, false);
   printf("9 %lf\n", ex2ex3_1);
 
@@ -188,17 +208,48 @@ int main() {
   double ex2ex3_3 = newton_raphson(&ex2_3a, -20, POW, P, false);
   printf("11 %lf\n", ex2ex3_3);
 
-
   printf("res: %lf\n", ex2_3a(ex2ex3_1));
   printf("res: %lf\n", ex2_3a(ex2ex3_2));
   printf("res: %lf\n", ex2_3a(ex2ex3_3));
-  */
-  for (double i = -2 ; i < 2.00001; i += 0.01) {
+}
+
+void test4() {
+  for (double i = -2; i < 2.00001; i += 0.01) {
     double xN = newton_raphson(&ex2_3b, i, POW * 10, P, false);
-    double xS = secant(&ex2_3b, i, POW*10, P);
+    double xS = secant(&ex2_3b, i, POW * 10, P);
     double resN = ex2_3b(xN);
     double resS = ex2_3b(xS);
     printf("N i: %lf, x: %lf, res: %lf\n", i, xN, resN);
     printf("S i: %lf, x: %lf, res: %lf\n", i, xS, resS);
   }
+}
+
+void test5(){
+  newton_raphson(&ex3_e, 0.4472135954999596, 50, P, false);
+}
+
+void test6_1(){
+  double res6 = secant_2(&ex2_3b, -1.5, 1.25, POW, P);
+  printf("%lf\n", res6);
+}
+
+void test6(){
+  double res = secant(&ex4, 1, POW, P);
+  double res2 = secant_2(&ex4, 1, 2, POW, P);
+  printf("%lf\n", res);
+  printf("%lf\n", res2);
+  printf("\n");
+  double res3 = secant_2(&ex2_3a, -2, 5, POW, P);
+  double res4 = secant_2(&ex2_3b, -2, 2, POW, P);
+  printf("%lf\n", res3);
+  printf("%lf\n", res4);
+  double res5 = secant_2(&ex2_3a, -2, 5, POW, P);
+  printf("%lf\n", res5);
+
+}
+
+int main() {
+  fesetround(FE_TONEAREST); 
+  test6_1();
+
 }

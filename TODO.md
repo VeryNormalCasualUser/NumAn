@@ -13,3 +13,4 @@ E.g.: kp(A) = 10^n then n digits will be lost in solving Ax = b
 kp(a) = ||A||p||A^-1||p - expensive to calculate
 
 Implement Gauss and Lu factorization by pivoting (use the custom pointer initilization matrix in Jonas Skeppstedts book )
+    See L10 slides (page 8)

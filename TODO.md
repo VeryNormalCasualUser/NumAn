@@ -12,5 +12,11 @@ E.g.: kp(A) = 10^n then n digits will be lost in solving Ax = b
 10^16 <= kp(A)  - completely unreliable
 kp(a) = ||A||p||A^-1||p - expensive to calculate
 
-Implement Gauss and Lu factorization by pivoting (use the custom pointer initilization matrix in Jonas Skeppstedts book )
+Implement Gauss and LU factorization by pivoting (use the custom pointer initilization matrix in Jonas Skeppstedts book )
     See L10 slides (page 8)
+
+implement Jacobi iteration method in 2 ways:
+    1) standard way, use array for D and Matrix for L and U
+    2) (potentially) optimized, array for D and sparse matrix representation from Jonas Skeppstedts book for L and U (or maybe just use A-D ?)
+
+IMPORTANT: Check for memory leaks using valgrind 

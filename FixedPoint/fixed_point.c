@@ -251,5 +251,5 @@ void test6(){
 int main() {
   fesetround(FE_TONEAREST); 
   test6_1();
-
+  return 0; 
 }

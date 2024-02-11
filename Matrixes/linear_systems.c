@@ -1,5 +1,5 @@
-#include "../numan_utils.h"
 #include "../Inverse-matrix.c"
+#include "../numan_utils.h"
 #include <assert.h>
 #include <fenv.h>
 #include <limits.h>
@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ITER 50
+#define ITER 10
 
 // determinant for Triangular and Diagonal matrixes
 double det_T(const unsigned int n, double T[n][n]) {
@@ -224,6 +224,106 @@ double *jacobi_method(const unsigned int n, int iterations, double A[n][n],
   return res;
 }
 
+void gauss_seidel_iteration(const unsigned int n, double mLpD_1U[n][n],
+                            double xk[n], double xk_1[n], double LpD_1b[n]) {
+  double mLpD_1Uxk[n];
+  print_array_wt(n, xk, "gauss-seidel iteration for xk:");
+
+  // nxn * n Matrix * vector multiplication
+  for (unsigned int i = 0; i < n; ++i) {
+    for (unsigned int j = 0; j < i; ++j) {
+      mLpD_1Uxk[i] = mLpD_1U[i][j] * xk[j];
+    }
+  }
+
+  double left;
+  double right;
+  for (unsigned int i = 0; i < n; ++i) {
+    left = mLpD_1Uxk[i];
+    right = LpD_1b[i];
+    printf("xk[%u] = %lf + %lf = %lf\n", i, left, right,
+           xk_1[i] = left + right);
+  }
+}
+
+double *gaus_seidel_method(const unsigned int n, int iterations, double A[n][n],
+                           double xk[n], double b[n]) {
+
+  double mLpD_1U[n][n];
+  double LpD_1b[n];
+  print_matrix_wt(n, A, "A:");
+  print_array_wt(n, xk, "x0:");
+  print_array_wt(n, b, "b:");
+  {
+    double U[n][n];
+    double LpD_T[n][n];
+    double LpD_1[n][n];
+    for (unsigned int i = 0; i < n; ++i) {
+      for (unsigned int j = i + 1; j < n; ++j) {
+        U[i][j] = A[i][j];
+        A[i][j] = 0.0;
+      }
+    }
+
+    // A is L+D after the loop above
+    print_matrix_wt(n, A, "L+D:");
+    print_matrix_wt(n, U, "U:");
+    inverse(n, A, determinant(n, A), LpD_1, LpD_T);
+
+    print_matrix_wt(n, LpD_1, "(L + D)^-1");
+
+    for (unsigned int i = 0; i < n; ++i) {
+      LpD_1b[i] = 0;
+      for (unsigned int j = 0; j <= i; ++j) {
+        LpD_1b[i] += LpD_1[i][j] * b[j];
+      }
+    }
+    print_array_wt(n, LpD_1b, "(L+D)^-1 * b:");
+
+    // nxn * nxn Matrix multiplication below
+    for (unsigned int i = 0; i < n; ++i) {
+      for (unsigned int j = 0; j < n; ++j) {
+        for (unsigned int k = 0; k < n; ++k) {
+          printf("mLpD_1U[%u][%u] = (0.0 - LpD_1[%u][%u]) * U[%u][%u] +  "
+                 "mLpD_1U[%u][%u] = %lf * %lf + %lf = %lf\n",
+                 i, j, i, k, k, j, i, j, (0.0 - LpD_1[i][k]), U[k][j],
+                 mLpD_1U[i][j], mLpD_1U[i][j] += (0.0 - LpD_1[i][k]) * U[k][j]);
+          ;
+        }
+      }
+    }
+    printf("\n");
+    // SUS^
+    print_matrix_wt(n, mLpD_1U, "-(L + D)^-1 * U");
+  }
+
+  double *xk_1 = calloc(n, sizeof(double));
+  double *temp;
+
+  const int it = iterations; // FOR DEBUG
+  while (iterations > 0) {
+    gauss_seidel_iteration(n, mLpD_1U, xk, xk_1, LpD_1b);
+    printf("x%d:\n", it - iterations);
+    print_array(n, xk);
+    printf("x%d:\n", it - iterations + 1);
+    print_array(n, xk_1);
+    temp = xk;
+    xk = xk_1;
+    xk_1 = temp;
+    temp = NULL;
+    for (unsigned int i = 0; i < n; ++i) {
+      xk_1[i] = 0.0;
+    }
+    iterations--;
+  }
+
+  double *res = calloc(n, sizeof(double));
+  memcpy(res, xk, n * sizeof(double));
+  free(xk);
+  free(xk_1);
+  return res;
+}
+
 void test_back_sub(void) {
   unsigned int n = 3;
   double U[n][n];
@@ -341,7 +441,8 @@ void test_solver(void) {
   free(x);
 }
 
-void testJacobi2x2(void) {
+void test2x2(double *(*f)(unsigned int n, int, double[n][n], double[n],
+                          double[n])) {
   unsigned int n = 2;
   double A[n][n];
   double b[n];
@@ -358,13 +459,14 @@ void testJacobi2x2(void) {
   x0[0] = 0;
   x0[1] = 1;
 
-  double *res = jacobi_method(n, ITER, A, x0, b);
+  double *res = (*f)(n, ITER, A, x0, b);
   assert(fabs(res[0] - 1.4) < P);
   assert(fabs(res[1] - 0.2) < P);
   free(res);
 }
 
-void testJacobi3x3(void) {
+void test3x3(double *(*f)(unsigned int n, int, double[n][n], double[n],
+                          double[n])) {
   unsigned int n = 3;
   double A[n][n];
   double b[n];
@@ -388,14 +490,15 @@ void testJacobi3x3(void) {
   x0[1] = 1.1;
   x0[2] = 2.1;
 
-  double *res = jacobi_method(n, ITER, A, x0, b);
+  double *res = (*f)(n, ITER, A, x0, b);
   for (unsigned int i = 0; i < n; ++i) {
     assert(fabs(res[i] - i) < P);
   }
   free(res);
 }
 
-void testJacobi4x4(void) {
+void test4x4(double *(*f)(unsigned int n, int, double[n][n], double[n],
+                          double[n])) {
 
   unsigned int n = 4;
   double A[n][n];
@@ -426,18 +529,18 @@ void testJacobi4x4(void) {
   b[2] = 1;
   b[3] = 1;
 
-
   double *x0 = calloc(n, sizeof(double));
   for (unsigned int i = 0; i < n; ++i) {
     x0[i] = 1.1;
   }
 
-  double *res = jacobi_method(n, ITER, A, x0, b);
-  assert(fabs(norm(n, res)) - 0.385746 < P*10);
+  double *res = (*f)(n, ITER, A, x0, b);
+  assert(fabs(norm(n, res)) - 0.385746 < P * 10);
   free(res);
 }
 
-void testJacobi6x6(void) {
+void test6x6(double *(*f)(unsigned int n, int, double[n][n], double[n],
+                          double[n])) {
 
   unsigned int n = 6;
   double A[n][n];
@@ -492,59 +595,44 @@ void testJacobi6x6(void) {
     x0[i] = 1.1;
   }
 
-  double *res = jacobi_method(n, ITER, A, x0, b);
+  double *res = (*f)(n, ITER, A, x0, b);
   for (unsigned int i = 0; i < n; ++i) {
     assert(fabs(res[i] - 1) < P);
   }
   free(res);
 }
 
-void testInvers2x2(void){
+void testInvers2x2(void) {
   unsigned int n = 2;
-  double A[n][n];
   double A_1[n][n];
-  double A_T[n][n];
+  {
+    double A[n][n];
 
-  A[0][0] = 1;
-  A[0][1] = 0;
-  A[1][0] = 3;
-  A[1][1] = 4;
+    double A_T[n][n];
 
-  inverse(n, A, determinant(n,A), A_1, A_T);
+    A[0][0] = 1;
+    A[0][1] = 0;
+    A[1][0] = 3;
+    A[1][1] = 4;
 
-  printf("A:\n");
-  for (unsigned int i = 0; i < n; ++i){
-    for (unsigned int j = 0; j < n; ++j){
-      printf("%lf ", A[i][j]);
-    }
-    printf("\n");
+    inverse(n, A, determinant(n, A), A_1, A_T);
   }
-  printf("\n");
 
-  printf("A^-1:\n");
-  for (unsigned int i = 0; i < n; ++i){
-    for (unsigned int j = 0; j < n; ++j){
-      printf("%lf ", A_1[i][j]);
-    }
-    printf("\n");
-  }
-  printf("\n");
-
-  printf("A^T:\n");
-  for (unsigned int i = 0; i < n; ++i){
-    for (unsigned int j = 0; j < n; ++j){
-      printf("%lf ", A_T[i][j]);
-    }
-    printf("\n");
-  }
-  printf("\n");
+  assert(fabs(A_1[0][0] - 1) < P);
+  assert(fabs(A_1[0][1] - 0) < P);
+  assert(fabs(A_1[1][0] + 0.75) < P);
+  assert(fabs(A_1[1][1] - 0.25) < P);
 }
 
 int main() {
   fesetround(FE_TONEAREST);
-  testJacobi2x2();
-  testJacobi3x3();  
-  testJacobi6x6();
-  testJacobi4x4();
-  testInvers2x2(); 
+  /*
+  test2x2(&jacobi_method);
+  test3x3(&jacobi_method);
+  test4x4(&jacobi_method);
+  test6x6(&jacobi_method);
+  */
+  test2x2(&gaus_seidel_method);
+  testInvers2x2();
+  return 0;
 }

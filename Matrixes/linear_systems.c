@@ -1,4 +1,5 @@
 #include "../numan_utils.h"
+#include "../Inverse-matrix.c"
 #include <assert.h>
 #include <fenv.h>
 #include <limits.h>
@@ -498,10 +499,52 @@ void testJacobi6x6(void) {
   free(res);
 }
 
+void testInvers2x2(void){
+  unsigned int n = 2;
+  double A[n][n];
+  double A_1[n][n];
+  double A_T[n][n];
+
+  A[0][0] = 1;
+  A[0][1] = 0;
+  A[1][0] = 3;
+  A[1][1] = 4;
+
+  inverse(n, A, determinant(n,A), A_1, A_T);
+
+  printf("A:\n");
+  for (unsigned int i = 0; i < n; ++i){
+    for (unsigned int j = 0; j < n; ++j){
+      printf("%lf ", A[i][j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+
+  printf("A^-1:\n");
+  for (unsigned int i = 0; i < n; ++i){
+    for (unsigned int j = 0; j < n; ++j){
+      printf("%lf ", A_1[i][j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+
+  printf("A^T:\n");
+  for (unsigned int i = 0; i < n; ++i){
+    for (unsigned int j = 0; j < n; ++j){
+      printf("%lf ", A_T[i][j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+}
+
 int main() {
   fesetround(FE_TONEAREST);
   testJacobi2x2();
   testJacobi3x3();  
   testJacobi6x6();
   testJacobi4x4();
+  testInvers2x2(); 
 }

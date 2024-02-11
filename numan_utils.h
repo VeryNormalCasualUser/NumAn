@@ -12,7 +12,7 @@ double derivative(double (*f)(double), double value, double precision) {
   return (x1 - x0) / (2 * precision);
 }
 
-void print_array_wt(unsigned int n, double b[n], char* str) {
+void print_array_wt(unsigned int n, double b[n], char *str) {
   printf("%s\n", str);
   for (unsigned int i = 0; i < n; ++i) {
     printf("%lf ", b[i]);
@@ -31,12 +31,12 @@ void print_array(unsigned int n, double b[n]) {
 void print_matrix(unsigned int n, double A[n][n]) {
   printf("\n");
   for (unsigned int i = 0; i < n; ++i) {
-    print_array(n, A[i]); 
+    print_array(n, A[i]);
   }
   printf("\n\n");
 }
 
-void print_matrix_wt(unsigned int n, double A[n][n], char* str) {
+void print_matrix_wt(unsigned int n, double A[n][n], char *str) {
   printf("%s\n", str);
   for (unsigned int i = 0; i < n; ++i) {
     print_array(n, A[i]);
@@ -44,12 +44,12 @@ void print_matrix_wt(unsigned int n, double A[n][n], char* str) {
   printf("\n\n");
 }
 
-double norm(unsigned int n, double vector[n]){
+double norm(unsigned int n, double vector[n]) {
   double sum = 0;
   double curr;
-  for (unsigned int i = 0; i < n; ++i){
+  for (unsigned int i = 0; i < n; ++i) {
     curr = vector[i];
-    sum += curr*curr;
+    sum += curr * curr;
   }
   return sqrt(sum);
 }
